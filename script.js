@@ -1,4 +1,5 @@
 const scene = document.getElementById('scene');
+const skyImage = document.getElementById('skyImage');
 const rainLayer = document.getElementById('rainLayer');
 
 function random(min, max) {
@@ -21,13 +22,35 @@ function buildRain(count) {
 
 buildRain(90);
 
-function weatherClassFromCode(code) {
-  if (code === 0) return 'weather-clear';
-  if ([1, 2].includes(code)) return 'weather-partly';
-  if (code === 3) return 'weather-overcast';
-  if ([45, 48].includes(code)) return 'weather-fog';
-  if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'weather-rain';
-  return 'weather-partly';
+function getCloudGroupFromWeatherCode(code) {
+  if (code === 0) return 'cavok';
+  if (code === 1) return 'few';
+  if (code === 2) return 'sct';
+  if (code === 3) return 'ovc';
+
+  if ([45, 48].includes(code)) return 'ovc';
+
+  if ([51, 53, 55, 56, 57].includes(code)) return 'bkn';
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'bkn';
+
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return 'bkn';
+
+  if ([95, 96, 99].includes(code)) return 'ovc';
+
+  return 'few';
+}
+
+function shouldShowFog(code) {
+  return [45, 48].includes(code);
+}
+
+function shouldShowRain(code) {
+  return [51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99].includes(code);
+}
+
+function getSkyImageName(isDay, cloudGroup) {
+  const prefix = isDay ? 'day' : 'night';
+  return `${prefix}_${cloudGroup}.png`;
 }
 
 async function applyLiveWeather() {
@@ -41,33 +64,26 @@ async function applyLiveWeather() {
     const current = data && data.current ? data.current : null;
     if (!current) return;
 
-    const weatherClass = weatherClassFromCode(Number(current.weather_code));
+    const weatherCode = Number(current.weather_code);
     const isDay = Number(current.is_day) === 1;
 
-    scene.classList.remove(
-      'weather-clear',
-      'weather-partly',
-      'weather-overcast',
-      'weather-fog',
-      'weather-rain',
-      'day',
-      'night'
-    );
+    const cloudGroup = getCloudGroupFromWeatherCode(weatherCode);
+    const imageName = getSkyImageName(isDay, cloudGroup);
 
-    scene.classList.add(weatherClass);
-    scene.classList.add(isDay ? 'day' : 'night');
+    skyImage.src = `${imageName}?v=11`;
+
+    scene.classList.remove('show-fog', 'show-rain');
+
+    if (shouldShowFog(weatherCode)) {
+      scene.classList.add('show-fog');
+    }
+
+    if (shouldShowRain(weatherCode)) {
+      scene.classList.add('show-rain');
+    }
   } catch (error) {
-    scene.classList.remove(
-      'weather-clear',
-      'weather-partly',
-      'weather-overcast',
-      'weather-fog',
-      'weather-rain',
-      'day',
-      'night'
-    );
-
-    scene.classList.add('weather-partly', 'day');
+    skyImage.src = 'day_few.png?v=11';
+    scene.classList.remove('show-fog', 'show-rain');
   }
 }
 
