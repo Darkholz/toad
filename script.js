@@ -2,6 +2,13 @@ const scene = document.getElementById('scene');
 const skyImage = document.getElementById('skyImage');
 const rainLayer = document.getElementById('rainLayer');
 
+const WEATHER_URL =
+  'https://api.open-meteo.com/v1/forecast?latitude=38.0151&longitude=-7.8632&current=weather_code,is_day&timezone=Europe%2FLisbon';
+
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos
+
+let currentSkySrc = '';
+
 function random(min, max) {
   return Math.random() * (max - min) + min;
 }
@@ -50,15 +57,32 @@ function shouldShowRain(code) {
 
 function getSkyImageName(isDay, cloudGroup) {
   const prefix = isDay ? 'day' : 'night';
-  return `${prefix}_${cloudGroup}.png`;
+  return `${prefix}_${cloudGroup}.png?v=11`;
+}
+
+function applyVisualState(weatherCode, isDay) {
+  const cloudGroup = getCloudGroupFromWeatherCode(weatherCode);
+  const imageName = getSkyImageName(isDay, cloudGroup);
+
+  if (currentSkySrc !== imageName) {
+    currentSkySrc = imageName;
+    skyImage.src = imageName;
+  }
+
+  scene.classList.remove('show-fog', 'show-rain');
+
+  if (shouldShowFog(weatherCode)) {
+    scene.classList.add('show-fog');
+  }
+
+  if (shouldShowRain(weatherCode)) {
+    scene.classList.add('show-rain');
+  }
 }
 
 async function applyLiveWeather() {
   try {
-    const url =
-      'https://api.open-meteo.com/v1/forecast?latitude=38.0151&longitude=-7.8632&current=weather_code,is_day&timezone=Europe%2FLisbon';
-
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(WEATHER_URL, { cache: 'no-store' });
     const data = await res.json();
 
     const current = data && data.current ? data.current : null;
@@ -67,24 +91,16 @@ async function applyLiveWeather() {
     const weatherCode = Number(current.weather_code);
     const isDay = Number(current.is_day) === 1;
 
-    const cloudGroup = getCloudGroupFromWeatherCode(weatherCode);
-    const imageName = getSkyImageName(isDay, cloudGroup);
-
-    skyImage.src = `${imageName}?v=11`;
-
-    scene.classList.remove('show-fog', 'show-rain');
-
-    if (shouldShowFog(weatherCode)) {
-      scene.classList.add('show-fog');
-    }
-
-    if (shouldShowRain(weatherCode)) {
-      scene.classList.add('show-rain');
-    }
+    applyVisualState(weatherCode, isDay);
   } catch (error) {
-    skyImage.src = 'day_few.png?v=11';
+    if (!currentSkySrc) {
+      currentSkySrc = 'day_few.png?v=11';
+      skyImage.src = currentSkySrc;
+    }
+
     scene.classList.remove('show-fog', 'show-rain');
   }
 }
 
 applyLiveWeather();
+setInterval(applyLiveWeather, REFRESH_INTERVAL);
