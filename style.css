@@ -49,7 +49,7 @@ body{
 
 .fly{
   position:absolute;
-  width:42px;
+  width:18px;
   height:auto;
   left:-100px;
   top:30vh;
@@ -60,7 +60,7 @@ body{
   opacity:0;
   transform-origin:center center;
   will-change:left, top, transform, opacity;
-  filter:drop-shadow(0 2px 5px rgba(0,0,0,0.18));
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,0.18));
 }
 
 .weather-fog-layer{
