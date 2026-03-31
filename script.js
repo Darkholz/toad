@@ -17,17 +17,15 @@ let flyTargetX = 0;
 let flyTargetY = 0;
 let flyAnglePhase = 0;
 
-let flyCaughtAt = performance.now();
-let flyNextStartDelay = getRandomDelay();
+let flyWaitingSince = performance.now();
+let flyNextStartDelay = 3000; // primeira aparição rápida
 let hoverStartedAt = 0;
-
-let pondReady = false;
 
 function random(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-function getRandomDelay() {
+function getRandomLoopDelay() {
   return random(2.5 * 60 * 1000, 5.5 * 60 * 1000);
 }
 
@@ -136,13 +134,14 @@ function getHoverArea() {
 function startFlyLoop(now) {
   flyState = 'entering';
   fly.style.opacity = '1';
-  flyX = -40;
+  flyX = -30;
   flyY = window.innerHeight * random(0.30, 0.40);
 
   const area = getHoverArea();
   flyTargetX = random(area.minX, area.maxX);
   flyTargetY = random(area.minY, area.maxY);
   hoverStartedAt = 0;
+  flyWaitingSince = now;
 }
 
 function setNewHoverTarget() {
@@ -156,16 +155,16 @@ function resetFlyWaiting(now) {
   fly.style.opacity = '0';
   flyX = -100;
   flyY = window.innerHeight * 0.32;
-  flyCaughtAt = now;
-  flyNextStartDelay = getRandomDelay();
+  flyWaitingSince = now;
+  flyNextStartDelay = getRandomLoopDelay();
   hoverStartedAt = 0;
 }
 
 function animateFly(now) {
-  if (!fly || !pondReady) return;
+  if (!fly) return;
 
   if (flyState === 'waiting') {
-    if (now - flyCaughtAt >= flyNextStartDelay) {
+    if (now - flyWaitingSince >= flyNextStartDelay) {
       startFlyLoop(now);
     }
   }
@@ -192,7 +191,6 @@ function animateFly(now) {
     flyY += dy * 0.025;
 
     flyAnglePhase += 0.1;
-
     flyX += Math.sin(flyAnglePhase * 1.7) * 0.7;
     flyY += Math.cos(flyAnglePhase * 2.1) * 0.5;
 
@@ -236,19 +234,6 @@ window.addEventListener('resize', () => {
     flyY = window.innerHeight * 0.32;
   }
 });
-
-const pondScene = document.getElementById('pondScene');
-if (pondScene) {
-  if (pondScene.complete) {
-    pondReady = true;
-    flyCaughtAt = performance.now();
-  } else {
-    pondScene.addEventListener('load', () => {
-      pondReady = true;
-      flyCaughtAt = performance.now();
-    });
-  }
-}
 
 applyLiveWeather();
 setInterval(applyLiveWeather, REFRESH_INTERVAL);
