@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sapo do Lago</title>
+  <meta name="description" content="Um sapo animado publicado com GitHub Pages." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <div>
+        <h1>Sapo do Lago</h1>
+        <p>Carrega nos botões e vê o sapo a reagir.</p>
+      </div>
+      <div class="status" id="status">À espera...</div>
+    </header>
+
+    <main class="content">
+      <section class="scene" aria-label="Cena do sapo">
+        <div class="sun"></div>
+        <div class="cloud c1"></div>
+        <div class="cloud c2"></div>
+        <div class="pond"><div class="ripple"></div></div>
+        <div class="leaf"></div>
+
+        <div class="frog-wrap idle" id="frogWrap">
+          <div class="frog">
+            <div class="arm left"><div class="hand"></div></div>
+            <div class="arm right"><div class="hand"></div></div>
+
+            <div class="body"><div class="belly"></div></div>
+
+            <div class="head">
+              <div class="eye left">
+                <div class="pupil" id="pupilLeft"></div>
+                <div class="eye-lid"></div>
+              </div>
+              <div class="eye right">
+                <div class="pupil" id="pupilRight"></div>
+                <div class="eye-lid"></div>
+              </div>
+              <div class="cheek left"></div>
+              <div class="cheek right"></div>
+              <div class="mouth"></div>
+            </div>
+
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+            <div class="throat"></div>
+          </div>
+        </div>
+
+        <div class="fly" id="fly"></div>
+      </section>
+
+      <aside class="panel">
+        <div class="card">
+          <h2>Ações do sapo</h2>
+          <div class="buttons">
+            <button class="primary" data-action="jump">Saltar</button>
+            <button class="secondary" data-action="dance">Dançar</button>
+            <button class="secondary" data-action="wave">Acenar</button>
+            <button class="secondary" data-action="croak">Coaxar</button>
+            <button class="secondary" data-action="sleep">Dormir</button>
+            <button class="danger" data-action="eat">Apanhar mosca</button>
+            <button class="wide" data-action="random">Fazer algo aleatório</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Publicação</h2>
+          <p>Este site está preparado para ser colocado num repositório do GitHub e publicado com GitHub Pages.</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
