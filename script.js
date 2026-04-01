@@ -251,7 +251,7 @@ async function playTongueCatch() {
     await wait(25);
 
     await setTongueFrame('tongue_1.png');
-    await await wait(30);
+    await wait(30);
 
     await setTongueFrame('tongue_2.png');
     await wait(25);
@@ -304,13 +304,13 @@ function getTongueBasePoint() {
 
   if (profile === 'desktop-large-short') {
     return {
-      x: rect.left + rect.width * 0.63,
+      x: rect.left + rect.width * 0.62,
       y: rect.top + rect.height * 0.72
     };
   }
 
   return {
-    x: rect.left + rect.width * 0.62,
+    x: rect.left + rect.width * 0.61,
     y: rect.top + rect.height * 0.76
   };
 }
