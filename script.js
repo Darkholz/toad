@@ -200,17 +200,28 @@ async function setTongueFrame(src) {
       });
     };
 
-    if (
-      tongueFrame.getAttribute('src') === src &&
-      tongueFrame.complete &&
-      tongueFrame.naturalWidth > 0
-    ) {
+    const currentSrc = tongueFrame.getAttribute('src');
+
+    tongueFrame.onload = null;
+    tongueFrame.onerror = null;
+
+    if (currentSrc === src && tongueFrame.complete && tongueFrame.naturalWidth > 0) {
       finalize();
       return;
     }
 
-    tongueFrame.onload = finalize;
-    tongueFrame.onerror = finalize;
+    tongueFrame.onload = () => {
+      tongueFrame.onload = null;
+      tongueFrame.onerror = null;
+      finalize();
+    };
+
+    tongueFrame.onerror = () => {
+      tongueFrame.onload = null;
+      tongueFrame.onerror = null;
+      resolve();
+    };
+
     tongueFrame.src = src;
   });
 }
@@ -222,22 +233,22 @@ async function playTongueCatch() {
   const isMobile = window.innerWidth <= 640;
 
   if (isMobile) {
-    setTongueFrame('tongue_3.png');
+    await setTongueFrame('tongue_3.png');
     await wait(50);
   } else {
-    setTongueFrame('tongue_3.png');
+    await setTongueFrame('tongue_3.png');
     await wait(25);
 
-    setTongueFrame('tongue_2.png');
+    await setTongueFrame('tongue_2.png');
     await wait(25);
 
-    setTongueFrame('tongue_1.png');
-    await wait(30);
+    await setTongueFrame('tongue_1.png');
+    await await wait(30);
 
-    setTongueFrame('tongue_2.png');
+    await setTongueFrame('tongue_2.png');
     await wait(25);
 
-    setTongueFrame('tongue_3.png');
+    await setTongueFrame('tongue_3.png');
     await wait(25);
   }
 
