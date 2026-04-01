@@ -176,13 +176,13 @@ async function playTongueCatch() {
 
   tongueAnimating = true;
 
-  setTongueFrame('3.png?v=tongue1');
+  setTongueFrame('tongue_3.png?v=tongue1');
   await wait(45);
 
-  setTongueFrame('2.png?v=tongue1');
+  setTongueFrame('tongue_2.png?v=tongue1');
   await wait(45);
 
-  setTongueFrame('1.png?v=tongue1');
+  setTongueFrame('tongue_1.png?v=tongue1');
   await wait(70);
 
   hideTongueFrame();
