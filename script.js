@@ -2,6 +2,7 @@ const scene = document.getElementById('scene');
 const skyImage = document.getElementById('skyImage');
 const rainLayer = document.getElementById('rainLayer');
 const fly = document.getElementById('fly');
+const pondScene = document.getElementById('pondScene');
 const yumBubble = document.getElementById('yumBubble');
 
 const WEATHER_URL =
@@ -22,6 +23,8 @@ let flyWaitingSince = performance.now();
 let flyNextStartDelay = 3000;
 let hoverStartedAt = 0;
 let sideSwitchAt = 0;
+
+let assetsReady = false;
 
 function random(min, max) {
   return Math.random() * (max - min) + min;
@@ -72,7 +75,7 @@ function shouldShowRain(code) {
 
 function getSkyImageName(isDay, cloudGroup) {
   const prefix = isDay ? 'day' : 'night';
-  return `${prefix}_${cloudGroup}.png`;
+  return `${prefix}_${cloudGroup}.png?v=16`;
 }
 
 function applyVisualState(weatherCode, isDay) {
@@ -109,7 +112,7 @@ async function applyLiveWeather() {
     applyVisualState(weatherCode, isDay);
   } catch (error) {
     if (!currentSkySrc) {
-      currentSkySrc = 'day_few.png';
+      currentSkySrc = 'day_few.png?v=16';
       skyImage.src = currentSkySrc;
     }
 
@@ -122,6 +125,28 @@ function getMouthPoint() {
     x: window.innerWidth * 0.505,
     y: window.innerHeight * 0.67
   };
+}
+
+function showYumBubble() {
+  if (!yumBubble) return;
+
+  const isMobile = window.innerWidth <= 640;
+
+  yumBubble.style.left = `${window.innerWidth * 0.52}px`;
+  yumBubble.style.top = isMobile
+    ? `${window.innerHeight * 0.68}px`
+    : `${window.innerHeight * 0.62}px`;
+
+  yumBubble.classList.add('show');
+
+  setTimeout(() => {
+    yumBubble.classList.remove('show');
+  }, 1200);
+}
+
+function hideYumBubble() {
+  if (!yumBubble) return;
+  yumBubble.classList.remove('show');
 }
 
 function getLeftHoverArea() {
@@ -145,28 +170,6 @@ function getRightHoverArea() {
 function setTargetInArea(area) {
   flyTargetX = random(area.minX, area.maxX);
   flyTargetY = random(area.minY, area.maxY);
-}
-
-function showYumBubble() {
-  if (!yumBubble) return;
-
-  const isMobile = window.innerWidth <= 640;
-  
-  yumBubble.style.left = `${window.innerWidth * 0.52}px`;
-  yumBubble.style.top = isMobile
-    ? `${window.innerHeight * 0.68}px`
-    : `${window.innerHeight * 0.64}px`;
-  
-  yumBubble.classList.add('show');
-
-  setTimeout(() => {
-    yumBubble.classList.remove('show');
-  }, 1200);
-}
-
-function hideYumBubble() {
-  if (!yumBubble) return;
-  yumBubble.classList.remove('show');
 }
 
 function startFlyLoop(now) {
@@ -209,7 +212,7 @@ function applyNaturalWobble() {
 }
 
 function animateFly(now) {
-  if (!fly) return;
+  if (!fly || !assetsReady) return;
 
   if (flyState === 'waiting') {
     if (now - flyWaitingSince >= flyNextStartDelay) {
@@ -270,15 +273,15 @@ function animateFly(now) {
     const mouth = getMouthPoint();
     const dx = mouth.x - flyX;
     const dy = mouth.y - flyY;
-  
+
     flyX += dx * 0.14;
     flyY += dy * 0.14;
-  
+
     if (Math.abs(dx) < 2 && Math.abs(dy) < 2) {
       flyState = 'digesting';
       fly.style.opacity = '0';
       showYumBubble();
-  
+
       setTimeout(() => {
         resetFlyWaiting(performance.now());
       }, 1200);
@@ -298,12 +301,55 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 
+function waitForImage(img) {
+  return new Promise((resolve) => {
+    if (!img) {
+      resolve();
+      return;
+    }
+
+    if (img.complete && img.naturalWidth > 0) {
+      if (typeof img.decode === 'function') {
+        img.decode().then(resolve).catch(resolve);
+      } else {
+        resolve();
+      }
+      return;
+    }
+
+    img.addEventListener('load', () => {
+      if (typeof img.decode === 'function') {
+        img.decode().then(resolve).catch(resolve);
+      } else {
+        resolve();
+      }
+    }, { once: true });
+
+    img.addEventListener('error', resolve, { once: true });
+  });
+}
+
+async function initScene() {
+  await applyLiveWeather();
+
+  await waitForImage(pondScene);
+  pondScene.classList.add('loaded');
+
+  await new Promise(resolve => setTimeout(resolve, 120));
+
+  await waitForImage(skyImage);
+  skyImage.classList.add('loaded');
+
+  assetsReady = true;
+  flyWaitingSince = performance.now();
+}
+
 window.addEventListener('resize', () => {
   if (flyState === 'waiting') {
     flyY = window.innerHeight * 0.32;
   }
 });
 
-applyLiveWeather();
 setInterval(applyLiveWeather, REFRESH_INTERVAL);
 requestAnimationFrame(tick);
+initScene();
