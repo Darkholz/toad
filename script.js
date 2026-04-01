@@ -7,7 +7,7 @@ const yumBubble = document.getElementById('yumBubble');
 const tongueFrame = document.getElementById('tongueFrame');
 
 const WEATHER_URL =
-  'https://api.open-meteo.com/v1/forecast?latitude=38.0151&longitude=-7.8632&current=weather_code,is_day&timezone=Europe%2FLisbon';
+  'https://api.open-meteo.com/v1/forecast?latitude=38.0151&longitude=-7.8632&current=weather_code,is_day&daily=sunrise,sunset&timezone=Europe%2FLisbon';
 
 const REFRESH_INTERVAL = 5 * 60 * 1000;
 
@@ -134,10 +134,27 @@ async function applyLiveWeather() {
     const data = await res.json();
 
     const current = data && data.current ? data.current : null;
+    const daily = data && data.daily ? data.daily : null;
+
     if (!current) return;
 
     const weatherCode = Number(current.weather_code);
-    const isDay = Number(current.is_day) === 1;
+
+    let isDay = Number(current.is_day) === 1;
+
+    if (
+      daily &&
+      Array.isArray(daily.sunset) &&
+      daily.sunset.length > 0 &&
+      Array.isArray(daily.sunrise) &&
+      daily.sunrise.length > 0
+    ) {
+      const now = new Date();
+      const sunrise = new Date(daily.sunrise[0]);
+      const sunset = new Date(daily.sunset[0]);
+
+      isDay = now >= sunrise && now < sunset;
+    }
 
     applyVisualState(weatherCode, isDay);
   } catch (error) {
@@ -149,7 +166,6 @@ async function applyLiveWeather() {
     scene.classList.remove('show-fog', 'show-rain');
   }
 }
-
 
 function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
