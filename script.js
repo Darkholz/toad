@@ -223,7 +223,7 @@ async function playTongueCatch() {
 
   if (isMobile) {
     setTongueFrame('tongue_3.png');
-    await wait(50);
+    await wait(30);
   } else {
     setTongueFrame('tongue_3.png');
     await wait(25);
