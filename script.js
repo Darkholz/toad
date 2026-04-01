@@ -304,14 +304,14 @@ function getTongueBasePoint() {
 
   if (profile === 'desktop-large-short') {
     return {
-      x: rect.left + rect.width * 0.62,
-      y: rect.top + rect.height * 0.705
+      x: rect.left + rect.width * 0.63,
+      y: rect.top + rect.height * 0.72
     };
   }
 
   return {
     x: rect.left + rect.width * 0.62,
-    y: rect.top + rect.height * 0.745
+    y: rect.top + rect.height * 0.76
   };
 }
 
