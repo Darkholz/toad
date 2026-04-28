@@ -9,6 +9,9 @@ const tongueFrame = document.getElementById('tongueFrame');
 const WEATHER_URL =
   'https://api.open-meteo.com/v1/forecast?latitude=38.0151&longitude=-7.8632&current=weather_code,is_day&daily=sunrise,sunset&timezone=Europe%2FLisbon';
 
+const METAR_URL =
+  'https://aviationweather.gov/api/data/metar?ids=LPBJ&format=json';
+
 const REFRESH_INTERVAL = 5 * 60 * 1000;
 
 let currentSkySrc = '';
@@ -80,7 +83,33 @@ function buildRain(count) {
 
 buildRain(90);
 
-function getCloudGroupFromWeatherCode(code) {
+function getCloudGroupFromMetar(metarData) {
+  const report = Array.isArray(metarData) && metarData.length > 0
+    ? metarData[0]
+    : null;
+
+  if (!report) return null;
+
+  if (report.cover) {
+    const cover = String(report.cover).toLowerCase();
+
+    if (['cavok', 'few', 'sct', 'bkn', 'ovc'].includes(cover)) {
+      return cover;
+    }
+  }
+
+  const rawOb = report.rawOb || '';
+
+  if (rawOb.includes('CAVOK')) return 'cavok';
+  if (/\bOVC\d{3}\b/.test(rawOb)) return 'ovc';
+  if (/\bBKN\d{3}\b/.test(rawOb)) return 'bkn';
+  if (/\bSCT\d{3}\b/.test(rawOb)) return 'sct';
+  if (/\bFEW\d{3}\b/.test(rawOb)) return 'few';
+
+  return null;
+}
+
+function getFallbackCloudGroupFromWeatherCode(code) {
   if (code === 0) return 'cavok';
   if (code === 1) return 'few';
   if (code === 2) return 'sct';
@@ -108,9 +137,9 @@ function getSkyImageName(isDay, cloudGroup) {
   return `${prefix}_${cloudGroup}.png?`;
 }
 
-function applyVisualState(weatherCode, isDay) {
-  const cloudGroup = getCloudGroupFromWeatherCode(weatherCode);
-  const imageName = getSkyImageName(isDay, cloudGroup);
+function applyVisualState(weatherCode, isDay, cloudGroup) {
+  const finalCloudGroup = cloudGroup || getFallbackCloudGroupFromWeatherCode(weatherCode);
+  const imageName = getSkyImageName(isDay, finalCloudGroup);
 
   if (currentSkySrc !== imageName) {
     currentSkySrc = imageName;
@@ -130,11 +159,16 @@ function applyVisualState(weatherCode, isDay) {
 
 async function applyLiveWeather() {
   try {
-    const res = await fetch(WEATHER_URL, { cache: 'no-store' });
-    const data = await res.json();
+    const [weatherRes, metarRes] = await Promise.all([
+      fetch(WEATHER_URL, { cache: 'no-store' }),
+      fetch(METAR_URL, { cache: 'no-store' })
+    ]);
 
-    const current = data && data.current ? data.current : null;
-    const daily = data && data.daily ? data.daily : null;
+    const weatherData = await weatherRes.json();
+    const metarData = await metarRes.json();
+
+    const current = weatherData && weatherData.current ? weatherData.current : null;
+    const daily = weatherData && weatherData.daily ? weatherData.daily : null;
 
     if (!current) return;
 
@@ -156,7 +190,9 @@ async function applyLiveWeather() {
       isDay = now >= sunrise && now < sunset;
     }
 
-    applyVisualState(weatherCode, isDay);
+    const metarCloudGroup = getCloudGroupFromMetar(metarData);
+
+    applyVisualState(weatherCode, isDay, metarCloudGroup);
   } catch (error) {
     if (!currentSkySrc) {
       currentSkySrc = 'day_few.png?';
